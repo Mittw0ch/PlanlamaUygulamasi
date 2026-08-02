@@ -67,8 +67,16 @@
     #drawMode {
       position: absolute; top: 12px; right: 12px; z-index: 999; background: var(--panel); border: 1px solid var(--line);
       border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      color: var(--muted);
     }
-    #drawMode.active { background: var(--accent2); color: #fff; }
+    #drawMode.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    #dolulukToggleBtn {
+      position: absolute; top: 56px; right: 12px; z-index: 999; background: var(--panel); border: 1px solid var(--line);
+      border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      color: var(--muted);
+    }
+    #dolulukToggleBtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     #selectionOverlay {
       position: absolute; top: 12px; left: 12px; z-index: 999; background: var(--panel); border: 1px solid var(--line);
@@ -245,6 +253,7 @@
     </div>
 
     <div id="drawMode">Çokgen Seç</div>
+    <div id="dolulukToggleBtn" class="" title="Rutların doluluk oranı rozetlerini haritada göster/gizle">Harita Üzerindeki Doluluk Oranını Göster</div>
     <div id="emptyState">
       <h2>Henüz veri yüklenmedi</h2>
       <p>Haritada rut planlaması yapabilmek için S_I ve Satınalma Hareketleri Dökümü sayfalarını içeren Excel dosyanızı yükleyin.</p>
@@ -264,6 +273,7 @@ let hiddenRoutes = new Set();
 let routeColors = {};
 let markerRefs = {};
 let dolulukMarkerRefs = {};
+let dolulukVisible = false; // "Doluluk %" butonu ile haritadaki rozetlerin gösterilip gizlenmesini kontrol eder
 
 // Çokgen Seçim Değişkenleri
 let drawMode = false;
@@ -414,6 +424,7 @@ function renderDolulukMarkers() {
   }
 
   Object.keys(currentRoutes).forEach(k => {
+    if (!dolulukVisible) return;
     if (hiddenRoutes.has(k)) return;
     const info = currentRoutes[k];
     if (!info.kapasite) return;
@@ -621,6 +632,21 @@ document.getElementById('createNewRouteBtn').addEventListener('click', () => {
   document.getElementById('newDagitici').value = '';
   document.getElementById('newPlaka').value = '';
   showToast(`✓ "${rut_adi}" rutu oluşturuldu.`);
+});
+
+// --- DOLULUK ORANI ROZETLERİNİ GÖSTER/GİZLE ---
+document.getElementById('dolulukToggleBtn').addEventListener('click', function() {
+  dolulukVisible = !dolulukVisible;
+  
+  // Sınıfı aktif/pasif yapar
+  this.classList.toggle('active', dolulukVisible);
+  
+  // Buton üzerindeki yazıyı duruma göre günceller
+  this.textContent = dolulukVisible 
+    ? 'Harita Üzerindeki Doluluk Oranını Gizle' 
+    : 'Harita Üzerindeki Doluluk Oranını Göster';
+    
+  renderDolulukMarkers();
 });
 
 // --- ÇOKGEN (POLYGON) SEÇİMİ ---
