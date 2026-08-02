@@ -191,7 +191,8 @@
       </div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
         <span id="saveIndicator" style="font-size:10.5px; color: var(--muted);"></span>
-        <span id="clearSavedBtn" style="font-size:10.5px; color:#c96a3d; font-weight:700; cursor:pointer; text-decoration:underline;">Kayıtlı Veriyi Temizle</span>
+        <button class="btn btn-ghost" id="clearSavedBtn">Kayıtlı Veriyi Temizle</button>
+
       </div>
     </div>
 
@@ -376,6 +377,7 @@ function updateSaveIndicator(iso) {
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
   el.textContent = `💾 Son kayıt: ${hh}:${mm}`;
+  el.style.marginRight = "18px";
 }
 
 async function loadSavedState() {
