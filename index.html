@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DD Anadolu Rut Planlama Çalışması</title>
+  <title>DD Anadolu Araç Planlama Çalışması</title>
   
   <!-- Dış Kütüphaneler: Harita (Leaflet) ve Excel (SheetJS) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -11,7 +11,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
-    /* 1. STİL TANIMLARI VE RENK DEĞİŞKENLERİ */
     :root {
       --ink: #1b2430;
       --paper: #f6f5f1;
@@ -95,7 +94,7 @@
     #emptyState h2 { font-size: 18px; margin: 0 0 8px; color: var(--ink); }
     #emptyState p { font-size: 13.5px; color: var(--muted); max-width: 320px; margin: 0 0 18px; line-height: 1.5; }
 
-    /* Rut Satırı ve Atama Buton Tasarımları */
+    /* Liste stilleri */
     .search-box { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; margin-bottom: 10px; background: #fbfaf7; }
     .route-row { 
       display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-radius: 10px; 
@@ -106,9 +105,9 @@
     }
     .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
     .route-main { flex: 1; min-width: 0; }
-    .route-name { font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink); }
-    .route-name:hover { color: var(--accent); text-decoration: underline; }
-    .route-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .route-sub { font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink); }
+    .route-sub:hover { color: var(--accent); text-decoration: underline; }
+    .route-name { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .route-stats { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
     .stat-badge { font-size: 10.5px; background: #efece3; padding: 2px 6px; border-radius: 4px; color: var(--ink); }
     .stat-badge b { font-weight: 700; color: var(--accent2); }
@@ -152,7 +151,6 @@
     .koli-marker-container { display: flex !important; align-items: center !important; justify-content: center !important; }
     .koli-text { font-weight: 700; font-size: 9px; color: white; text-shadow: 0 0.5px 2px rgba(0,0,0,0.6); pointer-events: none; user-select: none; line-height: 1; width: 100%; text-align: center; overflow: hidden; }
 
-    /* Rut Doluluk Oranı Rozeti (Harita) */
     .doluluk-marker-container { display: flex !important; align-items: center !important; justify-content: center !important; }
     .doluluk-badge {
       font-size: 11px; font-weight: 800; padding: 3px 7px; border-radius: 10px;
@@ -160,10 +158,8 @@
       white-space: nowrap; text-align: center; user-select: none;
     }
 
-    /* Rut Doluluk Oranı Rozeti (Liste) */
     .stat-badge.doluluk-stat { font-weight: 800; border: 1px solid rgba(0,0,0,0.08); }
 
-    /* Doluluk Oranı Gösterge (Legend) */
     .doluluk-legend { margin-bottom: 12px; }
     .doluluk-legend-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
     .doluluk-legend-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
@@ -177,10 +173,9 @@
 <body>
 
 <div id="app">
-  <!-- 2. ARAYÜZ (HTML) -->
   <div id="sidebar">
     <div id="sidebarHeader">
-      <div class="brand-title">Rut Planlama</div>
+      <div class="brand-title">Araç Planlama</div>
       <div class="brand-sub" id="storecount">Veri yüklenmedi</div>
       <div class="brand-koli" id="koliTotal">0 koli</div>
       <div class="header-actions">
@@ -192,39 +187,37 @@
       <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
         <span id="saveIndicator" style="font-size:10.5px; color: var(--muted);"></span>
         <button class="btn btn-ghost" id="clearSavedBtn">Kayıtlı Veriyi Temizle</button>
-
       </div>
     </div>
 
-    <!-- Güncellenmiş Sekmeler: "Atama" sekmesi kaldırıldı -->
     <div id="tabs">
-      <div class="tab active" data-panel="routes">Rutlar</div>
+      <div class="tab active" data-panel="routes">Araçlar</div>
       <div class="tab" data-panel="dists">Dağıtıcı Özeti</div>
       <div class="tab" data-panel="search">Ara</div>
     </div>
 
     <div id="panels">
       <div class="panel active" id="panel-routes">
-        <div class="legend-note">Renkli noktalar farklı rutları gösterir. Haritada nokta seçtiğinizde ilgili ruta odaklanılır. "Atama Yap" butonu ile seçili noktaları o ruta atayabilirsiniz.</div>
+        <div class="legend-note">Renkli noktalar farklı araçları gösterir. Haritada nokta seçtiğinizde ilgili araca odaklanılır. "Atama Yap" butonu ile seçili noktaları o araca atayabilirsiniz.</div>
 
         <div class="doluluk-legend" id="dolulukLegend" style="display:none;">
           <div class="doluluk-legend-header">
-            <div class="doluluk-legend-title">Rut Doluluk Oranı (Koli / Kapasite)</div>
+            <div class="doluluk-legend-title">Araç Doluluk Oranı (Koli / Kapasite)</div>
             <span class="doluluk-genel-badge" id="dolulukGenelBadge">–</span>
           </div>
           <div class="doluluk-legend-bar"></div>
           <div class="doluluk-legend-labels"><span>0%</span><span>~50%</span><span>100%+</span></div>
         </div>
 
-        <div class="newroute-toggle" id="newRouteToggle">+ Yeni Rut Tanımla</div>
+        <div class="newroute-toggle" id="newRouteToggle">+ Yeni Araç Tanımla</div>
         <div id="newRouteFields" style="display:none; background: #f9f8f5; padding: 10px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 12px;">
-          <label class="field-label">Rut Adı</label>
+          <label class="field-label">Araç Adı</label>
           <input type="text" id="newRutAdi" placeholder="örn. BEYKOZ 2">
           <label class="field-label">Personel</label>
           <input type="text" id="newDagitici" placeholder="örn. Ahmet Yılmaz">
           <label class="field-label">Plaka</label>
           <input type="text" id="newPlaka" placeholder="örn. 34AB123">
-          <button class="btn btn-primary" id="createNewRouteBtn" style="width:100%; margin-top:10px;">Rut Oluştur</button>
+          <button class="btn btn-primary" id="createNewRouteBtn" style="width:100%; margin-top:10px;">Araç Oluştur</button>
         </div>
 
         <div id="routeList"></div>
@@ -258,17 +251,16 @@
     </div>
 
     <div id="drawMode">Çokgen Seç</div>
-    <div id="dolulukToggleBtn" class="" title="Rutların doluluk oranı rozetlerini haritada göster/gizle">Harita Üzerindeki Doluluk Oranını Göster</div>
+    <div id="dolulukToggleBtn" class="" title="Araçların doluluk oranı rozetlerini haritada göster/gizle">Harita Üzerindeki Doluluk Oranını Göster</div>
     <div id="emptyState">
       <h2>Henüz veri yüklenmedi</h2>
-      <p>Haritada rut planlaması yapabilmek için S_I ve Satınalma Hareketleri Dökümü sayfalarını içeren Excel dosyanızı yükleyin.</p>
+      <p>Haritada araç planlaması yapabilmek için S_I ve Satınalma Hareketleri Dökümü sayfalarını içeren Excel dosyanızı yükleyin.</p>
       <button class="btn btn-primary" id="emptyStateImportBtn" style="flex:none;padding:10px 20px;">📥 Excel Yükle</button>
     </div>
     <div class="toast" id="toast"></div>
   </div>
 </div>
 
-<!-- 3. JAVASCRIPT MANTIK VE FONKSİYONLAR -->
 <script>
 // Uygulama Hafızası (State)
 let stores = [];              
@@ -278,14 +270,12 @@ let hiddenRoutes = new Set();
 let routeColors = {};
 let markerRefs = {};
 let dolulukMarkerRefs = {};
-let dolulukVisible = false; // "Doluluk %" butonu ile haritadaki rozetlerin gösterilip gizlenmesini kontrol eder
+let dolulukVisible = false;
 
-// Çokgen Seçim Değişkenleri
 let drawMode = false;
 let drawPoints = [];
 let drawPolyline = null;
 
-// Leaflet Haritasını Başlat
 const map = L.map('map', {zoomControl: false, preferCanvas: true}).setView([39.0, 35.0], 6);
 L.control.zoom({position: 'bottomright'}).addTo(map);
 
@@ -297,9 +287,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
 
 const canvasRenderer = L.canvas({padding: 0.5});
 
-// --- OTOMATİK YEREL DEPOLAMA (IndexedDB) ---
-// localStorage yerine IndexedDB kullanılıyor çünkü mağaza/ürün verisi büyüyünce
-// localStorage'ın ~5MB sınırını aşabiliyor; IndexedDB çok daha büyük veriyi sorunsuz tutar.
+// IndexedDB
 const DB_NAME = 'RutPlanlamaDB';
 const DB_STORE = 'appState';
 const DB_VERSION = 1;
@@ -345,14 +333,13 @@ async function idbDelete(key) {
   });
 }
 
-// Değişikliklerden hemen sonra art arda kayıt yapmamak için küçük bir gecikmeyle kaydeder (debounce).
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(persistState, 400);
 }
 
 async function persistState() {
-  if (!stores.length) return; // veri yoksa boş durumu kaydedip önceki kaydı silmeyelim
+  if (!stores.length) return;
   const payload = {
     stores,
     currentRoutes,
@@ -406,7 +393,7 @@ async function loadSavedState() {
 
     const totalKoli = stores.reduce((sum, st) => sum + (st.koli || 0), 0);
     const kFormat = Number.isInteger(totalKoli) ? totalKoli : totalKoli.toFixed(2);
-    document.getElementById('storecount').textContent = `${stores.length} mağaza · ${Object.keys(currentRoutes).length} rut`;
+    document.getElementById('storecount').textContent = `${stores.length} mağaza · ${Object.keys(currentRoutes).length} araç`;
     document.getElementById('koliTotal').textContent = `${kFormat} koli`;
 
     if (stores.length) {
@@ -421,7 +408,7 @@ async function loadSavedState() {
 }
 
 document.getElementById('clearSavedBtn').addEventListener('click', async () => {
-  if (!confirm('Cihazda otomatik kaydedilmiş rut planlama verisi silinecek. Emin misiniz?')) return;
+  if (!confirm('Cihazda otomatik kaydedilmiş araç planlama verisi silinecek. Emin misiniz?')) return;
   try {
     await idbDelete(SAVE_KEY);
     updateSaveIndicator(null);
@@ -432,15 +419,9 @@ document.getElementById('clearSavedBtn').addEventListener('click', async () => {
   }
 });
 
-// --- YARDIMCI FONKSİYONLAR ---
+// Yardımcı
 function escapeHtml(str) {
   return String(str || '').replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-}
-
-function buildRouteList() {
-  const set = {};
-  stores.forEach(s => { set[s.rut_kodu] = {rut_adi: s.rut_adi, dagitici: s.dagitici, plaka: s.plaka}; });
-  return set;
 }
 
 function assignColors() {
@@ -492,27 +473,25 @@ function resetAllState() {
   routeColors = {};
 }
 
-// --- RUT DOLULUK ORANI (KAPASİTE BAZLI) ---
+// Doluluk hesapları
 function routeKoli(k) {
   return stores.filter(s => s.rut_kodu === k).reduce((sum, st) => sum + (st.koli || 0), 0);
 }
 
-// Kapasitesi tanımlı bir rut için doluluk yüzdesini hesaplar. Kapasite yoksa null döner.
 function computeDoluluk(k) {
   const info = currentRoutes[k];
   if (!info || !info.kapasite || info.kapasite <= 0) return null;
   return (routeKoli(k) / info.kapasite) * 100;
 }
 
-// Doluluk oranına göre açık maviden kırmızıya doğru dinamik renk üretir.
 function dolulukColor(pct) {
   if (pct === null || pct === undefined || isNaN(pct)) return '#c9ccd1';
   const stops = [
-    { p: 0,   c: [214, 234, 248] }, // açık mavi (boş)
-    { p: 40,  c: [93, 173, 226] },  // mavi
-    { p: 70,  c: [244, 208, 63] },  // sarı
-    { p: 100, c: [231, 76, 60] },   // kırmızı (dolu/kapasite tavanı)
-    { p: 130, c: [146, 24, 14] }    // koyu kırmızı (kapasite aşımı)
+    { p: 0,   c: [214, 234, 248] },
+    { p: 40,  c: [93, 173, 226] },
+    { p: 70,  c: [244, 208, 63] },
+    { p: 100, c: [231, 76, 60] },
+    { p: 130, c: [146, 24, 14] }
   ];
   const p = Math.max(0, Math.min(pct, stops[stops.length - 1].p));
   let lower = stops[0], upper = stops[stops.length - 1];
@@ -532,19 +511,15 @@ function clearDolulukMarkers() {
   dolulukMarkerRefs = {};
 }
 
-// Her rutun mağazalarının ağırlık merkezine, kapasiteye göre dinamik renkli doluluk % rozeti çizer.
 function renderDolulukMarkers() {
   clearDolulukMarkers();
   let anyCapacity = false;
 
-  // Genel filo doluluğu: kapasitesi tanımlı TÜM rutların (gizli olsa bile) toplam koli / toplam kapasite oranı.
-  // Not: toplam koli / toplam kapasite, "araç koli ortalamasının kapasiteye oranı" ile matematiksel olarak eşdeğerdir
-  // (n araç sayısı payda ve paydanda sadeleşir), bu yüzden en sağlıklı hesap yöntemi budur.
   let totalKoliForCapacity = 0;
   let totalKapasite = 0;
   Object.keys(currentRoutes).forEach(k => {
     const info = currentRoutes[k];
-    if (!info.kapasite) return;
+    if (!info || !info.kapasite) return;
     anyCapacity = true;
     totalKoliForCapacity += routeKoli(k);
     totalKapasite += info.kapasite;
@@ -601,7 +576,7 @@ function renderDolulukMarkers() {
   if (legend) legend.style.display = anyCapacity ? 'block' : 'none';
 }
 
-// --- HARİTA NOKTALARINI (MARKER) ÇİZDİRME ---
+// Markers
 function markerRadius(s) { return selected.has(s._id) ? 8 : 5.5; }
 
 function markerStyle(s) {
@@ -629,9 +604,8 @@ function popupHtml(s) {
       <div><span style="color:#666;">Toplam Koli:</span> <b style="font-size:15px;color:#c96a3d;">${koliFormat}</b></div>
     </div>
     <div style="background:#e8f5e9;padding:8px;border-radius:6px;margin-bottom:8px;">
-      <div style="margin-bottom:4px;font-weight:700;color:#2f6f5e;">Atanan Rut</div>
-      <div style="margin-bottom:4px;"><span style="color:#666;">Rut Adı:</span> <b>${escapeHtml(s.rut_adi)}</b></div>
-      <div><span style="color:#666;">Rut Kodu:</span> <b>${s.rut_kodu}</b></div>
+      <div style="margin-bottom:4px;font-weight:700;color:#2f6f5e;">Atanan Araç</div>
+      <div><span style="color:#666;">Araç Adı:</span> <b>${escapeHtml(s.rut_adi)}</b></div>
     </div>
     <div style="background:#f3e5f5;padding:8px;border-radius:6px;">
       <div style="margin-bottom:4px;font-weight:700;color:#7b1fa2;">Dağıtım Bilgileri</div>
@@ -670,7 +644,7 @@ function renderMarkers() {
   renderDolulukMarkers();
 }
 
-// --- SEÇİM YÖNETİMİ VE ARAYÜZ GÜNCELLEMESİ ---
+// Selection
 function toggleSelect(id) {
   if (selected.has(id)) selected.delete(id); else selected.add(id);
   const s = stores[id];
@@ -691,11 +665,9 @@ function refreshSelectionUI() {
 
   highlightSelectedRoutes();
 
-  // Otomatik olarak son seçilen noktanın rutuna kaydır ve sekmeyi Rutlar yap
   if (selected.size > 0) {
     const lastSelectedId = Array.from(selected).pop();
     const targetRouteKey = stores[lastSelectedId]?.rut_kodu;
-    
     if (targetRouteKey) {
       switchTab('routes'); 
       const targetRow = document.getElementById(`route-row-${targetRouteKey}`);
@@ -715,7 +687,6 @@ function highlightSelectedRoutes() {
   });
 }
 
-// --- DOĞRUDAN RUTA ATAMA İŞLEMİ ---
 function assignSelectedToRoute(key) {
   if (selected.size === 0) {
     showToast('⚠️ Lütfen önce haritadan veya arama panelinden nokta seçin.');
@@ -741,11 +712,10 @@ function assignSelectedToRoute(key) {
   renderDistSummary();
   refreshSelectionUI();
 
-  showToast(`✓ ${count} mağaza "${info.rut_adi}" rutuna başarıyla atandı.`);
+  showToast(`✓ ${count} mağaza "${info.rut_adi}" aracına başarıyla atandı.`);
   scheduleSave();
 }
 
-// --- YENİ RUT TANIMLAMA ---
 document.getElementById('newRouteToggle').addEventListener('click', () => {
   const f = document.getElementById('newRouteFields');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
@@ -757,11 +727,11 @@ document.getElementById('createNewRouteBtn').addEventListener('click', () => {
   const plaka = document.getElementById('newPlaka').value.trim();
 
   if (!rut_adi || !dagitici) {
-    showToast('⚠️ Rut adı ve personel ismi girmelisiniz.');
+    showToast('⚠️ Araç adı ve personel ismi girmelisiniz.');
     return;
   }
 
-  const key = 'RUT-YENI-' + rut_adi.toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ]+/g, '').slice(0, 20) + '-' + (Date.now() % 10000);
+  const key = 'ARAC-YENI-' + rut_adi.toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ]+/g, '').slice(0, 20) + '-' + (Date.now() % 10000);
   currentRoutes[key] = { rut_adi, dagitici, plaka: plaka || '-' };
 
   assignColors();
@@ -772,27 +742,21 @@ document.getElementById('createNewRouteBtn').addEventListener('click', () => {
   document.getElementById('newRutAdi').value = '';
   document.getElementById('newDagitici').value = '';
   document.getElementById('newPlaka').value = '';
-  showToast(`✓ "${rut_adi}" rutu oluşturuldu.`);
+  showToast(`✓ "${rut_adi}" aracı oluşturuldu.`);
   scheduleSave();
 });
 
-// --- DOLULUK ORANI ROZETLERİNİ GÖSTER/GİZLE ---
 document.getElementById('dolulukToggleBtn').addEventListener('click', function() {
   dolulukVisible = !dolulukVisible;
-  
-  // Sınıfı aktif/pasif yapar
   this.classList.toggle('active', dolulukVisible);
-  
-  // Buton üzerindeki yazıyı duruma göre günceller
   this.textContent = dolulukVisible 
     ? 'Harita Üzerindeki Doluluk Oranını Gizle' 
     : 'Harita Üzerindeki Doluluk Oranını Göster';
-    
   renderDolulukMarkers();
   scheduleSave();
 });
 
-// --- ÇOKGEN (POLYGON) SEÇİMİ ---
+// Polygon select
 document.getElementById('drawMode').addEventListener('click', () => {
   if (!drawMode) {
     drawMode = true;
@@ -855,146 +819,30 @@ function selectInPolygon(poly) {
   showToast(`${selected.size} mağaza seçildi`);
 }
 
-// --- RUT LİSTESİ PANELİ ---
-function renderRouteList() {
-  const container = document.getElementById('routeList');
-  container.innerHTML = '';
-  const keys = Object.keys(currentRoutes).sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
-  
-  keys.forEach(k => {
-    const info = currentRoutes[k];
-    const count = stores.filter(s => s.rut_kodu === k).length;
-    const koli = stores.filter(s => s.rut_kodu === k).reduce((s, st) => s + (st.koli || 0), 0);
-    const kFormat = Number.isInteger(koli) ? koli : koli.toFixed(2);
-    const pct = computeDoluluk(k);
-    const dolulukBadge = pct !== null
-      ? `<span class="stat-badge doluluk-stat" style="background:${dolulukColor(pct)};color:${pct >= 65 ? '#fff' : '#1b2430'};">${pct.toFixed(0)}% dolu</span>`
-      : '';
-
-    const row = document.createElement('div');
-    row.className = 'route-row';
-    row.dataset.routeKey = k;
-    row.id = `route-row-${k}`;
-    
-    row.innerHTML = `
-      <span class="swatch" style="background:${routeColors[k] || '#888'}"></span>
-      <div class="route-main">
-        <div class="route-name" title="Haritada göstermek için tıklayın">${escapeHtml(info.rut_adi)}</div>
-        <div class="route-sub">${escapeHtml(info.dagitici)} · ${escapeHtml(info.plaka)}</div>
-        <div class="route-stats">
-          <span class="stat-badge"><b>${count}</b> nokta</span>
-          <span class="stat-badge"><b>${kFormat}</b> koli</span>
-          ${dolulukBadge}
-        </div>
-      </div>
-      <div class="route-actions">
-        <input type="checkbox" class="route-toggle" ${hiddenRoutes.has(k) ? '' : 'checked'} title="Göster/Gizle">
-        <button type="button" class="btn-assign-direct" title="Seçili noktaları bu ruta ata">Atama Yap</button>
-      </div>
-    `;
-
-    row.querySelector('.route-name').addEventListener('click', () => zoomToRoute(k));
-    
-    row.querySelector('.route-toggle').addEventListener('change', (e) => {
-      if (e.target.checked) hiddenRoutes.delete(k); else hiddenRoutes.add(k);
-      renderMarkers();
-      scheduleSave();
-    });
-
-    row.querySelector('.btn-assign-direct').addEventListener('click', (e) => {
-      e.stopPropagation();
-      assignSelectedToRoute(k);
-    });
-
-    container.appendChild(row);
-
-    const selAllBtn = document.createElement('div');
-    selAllBtn.style.cssText = 'text-align:right;font-size:11px;color:#2f6f5e;font-weight:700;padding:2px 6px 8px;cursor:pointer;';
-    selAllBtn.textContent = 'Tümünü Seç →';
-    selAllBtn.addEventListener('click', () => selectAllInRoute(k));
-    container.appendChild(selAllBtn);
-  });
+// Yardımcı: split and group keys
+function splitRouteParts(name) {
+  if (!name || typeof name !== 'string') return ['Atanmamış'];
+  const parts = name
+    .split(/[,\/;&]|(?:\s+ve\s+)|\s*[-–]\s*/i)
+    .map(p => p.trim())
+    .filter(Boolean);
+  return parts.length ? parts : ['Atanmamış'];
 }
 
-function zoomToRoute(k) {
-  const pts = stores.filter(s => s.rut_kodu === k).map(s => [s.lat, s.lon]);
-  if (pts.length === 0) return;
-  map.fitBounds(pts, {padding: [40, 40], maxZoom: 15});
+function normalizeKeyPart(s) {
+  return String(s || '').trim().replace(/\s+/g, ' ').toLocaleUpperCase('tr');
+}
+function normalizePlaka(s) {
+  // Plaka yazımındaki boşluk/tire farklarını yok sayar (örn. "34 AB 123" ile "34AB123" aynı araç sayılır)
+  return String(s || '').trim().toLocaleUpperCase('tr').replace(/[\s-]+/g, '');
+}
+function makeGroupKey(dagitici, plaka) {
+  const d = normalizeKeyPart(dagitici);
+  const p = normalizePlaka(plaka);
+  return `GRP|${d}|${p}`;
 }
 
-function selectAllInRoute(k) {
-  stores.filter(s => s.rut_kodu === k).forEach(s => selected.add(s._id));
-  renderMarkers();
-  refreshSelectionUI();
-  switchTab('routes');
-  showToast(`${currentRoutes[k].rut_adi} rutundaki tüm mağazalar seçildi`);
-}
-
-// --- DAĞITICI ÖZETİ PANELİ ---
-function renderDistSummary() {
-  const container = document.getElementById('distSummary');
-  container.innerHTML = '';
-  const stats = calcDistStats();
-  const sorted = Object.values(stats).sort((a,b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
-  
-  sorted.forEach(d => {
-    const kFormat = Number.isInteger(d.koli) ? d.koli : d.koli.toFixed(2);
-    const row = document.createElement('div');
-    row.className = 'dist-summary';
-    row.innerHTML = `
-      <div class="dist-summary-row">
-        <div class="dist-name">${escapeHtml(d.dagitici)}</div>
-        <div class="dist-nums">
-          <span><b>${d.nokta}</b> nokta</span>
-          <span><b>${kFormat}</b> koli</span>
-        </div>
-      </div>
-      <div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(d.rut_adi)} · ${escapeHtml(d.plaka)}</div>
-    `;
-    container.appendChild(row);
-  });
-}
-
-// --- MAĞAZA ARAMA ---
-function renderSearchResults(query) {
-  const container = document.getElementById('searchResults');
-  container.innerHTML = '';
-  if (!query || query.trim().length < 2) {
-    container.innerHTML = '<div class="hint">En az 2 karakter yazın.</div>';
-    return;
-  }
-  const q = query.trim().toLocaleLowerCase('tr');
-  const matches = stores.filter(s => s.ad.toLocaleLowerCase('tr').includes(q) || String(s.kod).includes(q)).slice(0, 40);
-  
-  if (matches.length === 0) {
-    container.innerHTML = '<div class="hint">Sonuç bulunamadı.</div>';
-    return;
-  }
-  matches.forEach(s => {
-    const kFormat = Number.isInteger(s.koli) ? s.koli : s.koli.toFixed(2);
-    const row = document.createElement('div');
-    row.className = 'store-row';
-    row.innerHTML = `<b>${escapeHtml(s.ad)}</b><div class="meta">Kod: ${s.kod} · Koli: ${kFormat} · ${selected.has(s._id) ? '✓ Seçili' : ''}</div>`;
-    row.addEventListener('click', () => {
-      map.setView([s.lat, s.lon], 16);
-      toggleSelect(s._id);
-      renderSearchResults(query);
-      if (markerRefs[s._id]) markerRefs[s._id].circle.openPopup();
-    });
-    container.appendChild(row);
-  });
-}
-
-document.getElementById('resetBtn').addEventListener('click', () => {
-  selected.clear();
-  renderMarkers();
-  refreshSelectionUI();
-  showToast('Seçim temizlendi');
-});
-
-document.getElementById('searchInput').addEventListener('input', (e) => renderSearchResults(e.target.value));
-
-// --- EXCEL OKUMA (IMPORT) ---
+// Excel import
 function findColumn(sampleRow, nameParts) {
   const keys = Object.keys(sampleRow || {});
   for (const part of nameParts) {
@@ -1047,28 +895,35 @@ async function handleExcelFile(file) {
       }
     }
 
-    const siCols = {
-      kod: findColumn(siData[0], ['Cari Hesap Kodu']),
-      ad: findColumn(siData[0], ['Cari Hesap Ünvanı']),
-      lat: findColumn(siData[0], ['Enlem']),
-      lon: findColumn(siData[0], ['Boylam']),
-      rut_kodu: findColumn(siData[0], ['PSE Kodu']),
-      rut_adi: findColumn(siData[0], ['PSE Adı']),
-      dagitici: findColumn(siData[0], ['DAĞITIM PERSONELİ']),
-      plaka: findColumn(siData[0], ['PLAKA'])
-    };
+    // S_I sayfasındaki sütun tanımlamalarına koli sütununu ekleyin
+const siCols = {
+  kod: findColumn(siData[0], ['Cari Hesap Kodu']),
+  ad: findColumn(siData[0], ['Cari Hesap Ünvanı']),
+  lat: findColumn(siData[0], ['Enlem']),
+  lon: findColumn(siData[0], ['Boylam']),
+  rut_kodu: findColumn(siData[0], ['PSE Kodu']),
+  rut_adi: findColumn(siData[0], ['PSE Adı', 'MST145_.PSE Adı']),
+  dagitici: findColumn(siData[0], ['DAĞITIM PERSONELİ','Dağıtım Personeli']),
+  plaka: findColumn(siData[0], ['PLAKA']),
+  // S_I sayfasındaki koli sütunu:
+  koli: findColumn(siData[0], ['S_H_D (2).toplam_koli', 'toplam_koli', 'Toplam Koli']) 
+};
 
-    // "Rut Bilgisi" sayfasından KAPASİTE bilgisini oku (rut koduna, olmazsa rut adına göre eşleştir)
+    // Rut Bilgisi — önce basit maps
     const rbSheet = wb.Sheets['Rut Bilgisi'];
     const capacityByKodu = {};
     const capacityByAdi = {};
+    let capacityByPlaka = {};
+    let capacityByDagitici = {};
     if (rbSheet) {
       const rbData = XLSX.utils.sheet_to_json(rbSheet);
       if (rbData.length) {
         const rbCols = {
           kodu: findColumn(rbData[0], ['PSE Kodu', 'Rut Kodu', 'RUT KODU']),
           adi: findColumn(rbData[0], ['PSE Adı', 'Rut Adı', 'RUT ADI']),
-          kapasite: findColumn(rbData[0], ['KAPASİTE', 'KAPASITE', 'Kapasite'])
+          kapasite: findColumn(rbData[0], ['KAPASİTE', 'KAPASITE', 'Kapasite']),
+          plaka: findColumn(rbData[0], ['PLAKA', 'Plaka', 'Plaka No', 'Araç', 'Arac', 'Plate']),
+          dagitici: findColumn(rbData[0], ['DAĞITIM PERSONELİ','Dağıtım Personeli','Personel','Sürücü','Dagitici'])
         };
         if (rbCols.kapasite) {
           rbData.forEach(row => {
@@ -1079,7 +934,13 @@ async function handleExcelFile(file) {
               capacityByKodu[String(row[rbCols.kodu]).trim()] = kap;
             }
             if (rbCols.adi && row[rbCols.adi] !== undefined && row[rbCols.adi] !== '') {
-              capacityByAdi[String(row[rbCols.adi]).trim().toUpperCase()] = kap;
+              capacityByAdi[normalizeKeyPart(row[rbCols.adi])] = kap;
+            }
+            if (rbCols.plaka && row[rbCols.plaka] !== undefined && String(row[rbCols.plaka]).trim() !== '') {
+              capacityByPlaka[normalizePlaka(row[rbCols.plaka])] = kap;
+            }
+            if (rbCols.dagitici && row[rbCols.dagitici] !== undefined && String(row[rbCols.dagitici]).trim() !== '') {
+              capacityByDagitici[normalizeKeyPart(row[rbCols.dagitici])] = kap;
             }
           });
         } else {
@@ -1094,40 +955,185 @@ async function handleExcelFile(file) {
       return o;
     }).filter(r => r.lat && r.lon && !isNaN(r.lat) && !isNaN(r.lon));
 
-    const seen = {};
-    const newStores = normalized.filter(r => {
-      const kod = parseInt(r.kod) || 0;
-      if (seen[kod]) return false;
-      seen[kod] = true;
-      return true;
-    }).map((s, i) => {
-      const pData = productMap[parseInt(s.kod)] || { urunler: [], toplamKoli: 0 };
-      return {
-        kod: parseInt(s.kod) || 0,
-        ad: s.ad || 'İsimsiz',
-        lat: parseFloat(s.lat) || 0,
-        lon: parseFloat(s.lon) || 0,
-        koli: pData.toplamKoli,
-        rut_kodu: s.rut_kodu || 'RUT-?',
-        rut_adi: s.rut_adi || 'Atanmamış',
-        dagitici: s.dagitici || 'Atanmamış',
-        plaka: s.plaka || '-',
-        urunler: pData.urunler,
-        _id: i
-      };
-    });
-
+    // ---------- Araç (vehicle) bazlı gruplayarak stores ve currentRoutes oluşturma ----------
     resetAllState();
-    stores = newStores;
-    currentRoutes = buildRouteList();
 
-    // Rut Bilgisi sayfasından okunan KAPASİTE değerlerini rutlarla eşleştir
-    Object.keys(currentRoutes).forEach(k => {
-      const info = currentRoutes[k];
-      let kap = capacityByKodu[String(k).trim()];
-      if (kap === undefined && info.rut_adi) kap = capacityByAdi[String(info.rut_adi).trim().toUpperCase()];
-      info.kapasite = kap; // undefined ise doluluk hesaplanmaz
+const tempStores = normalized.map((s, i) => {
+  const pData = productMap[parseInt(s.kod)] || { urunler: [], toplamKoli: 0 };
+  
+  // Eğer S_I sayfasında koli değeri varsa onu kullan, yoksa sayıya çevir (varsayılan 0)
+  const rawKoli = s.koli !== undefined ? String(s.koli).replace(',', '.') : 0;
+  const parsedKoli = parseFloat(rawKoli) || 0;
+
+  return {
+    kod: parseInt(s.kod) || 0,
+    ad: s.ad || 'İsimsiz',
+    lat: parseFloat(s.lat) || 0,
+    lon: parseFloat(s.lon) || 0,
+    koli: parsedKoli, // Artık S_I sayfasındaki S_H_D (2).toplam_koli sütunundan alınıyor
+    original_rut_adi: s.rut_adi || 'Atanmamış',
+    rut_kodu_original: s.rut_kodu || '',
+    rut_adi: s.rut_adi || 'Atanmamış',
+    dagitici: s.dagitici || 'Atanmamış',
+    plaka: s.plaka || '-',
+    urunler: pData.urunler,
+    _id: i
+  };
+});
+
+// NORMALIZE KOD (hem productMap hem mağaza için aynı)
+function normalizeKodRaw(v) {
+  if (v === undefined || v === null) return '';
+  // Excel bazen sayıyı 123.0 şeklinde verir; bunu temizle
+  let s = typeof v === 'number' ? String(v) : String(v);
+  s = s.replace(/\u00A0/g, ' ').trim();
+  if (/^\d+\.0+$/.test(s)) s = String(parseInt(s, 10));
+  // isteğe bağlı: büyük/küçük harf farkları varsa standartlaştır:
+  s = s.toUpperCase();
+  return s;
+}
+
+function debugReport(productMap, stores) {
+  // build maps keyed by normalized kod
+  const pm = {};
+  Object.keys(productMap).forEach(k => {
+    const nk = normalizeKodRaw(k);
+    pm[nk] = (pm[nk] || 0) + (productMap[k].toplamKoli || 0);
+  });
+
+  const sm = {};
+  stores.forEach(s => {
+    const nk = normalizeKodRaw(s.kod);
+    sm[nk] = (sm[nk] || 0) + (s.koli || 0);
+  });
+
+  // totals
+  const totalExcel = Object.values(pm).reduce((a,b)=>a+b,0);
+  const totalUI = Object.values(sm).reduce((a,b)=>a+b,0);
+
+  // find unique sets and diffs
+  const onlyInExcel = [];
+  const onlyInUI = [];
+  const bothButDiff = [];
+
+  const allKeys = new Set([...Object.keys(pm), ...Object.keys(sm)]);
+  allKeys.forEach(k => {
+    const ex = pm[k] || 0;
+    const ui = sm[k] || 0;
+    if (ex > 0 && ui === 0) onlyInExcel.push({kod:k, excel:ex, ui});
+    else if (ui > 0 && ex === 0) onlyInUI.push({kod:k, excel:ex, ui});
+    else if (Math.abs(ex - ui) > 0.0001) bothButDiff.push({kod:k, excel:ex, ui, diff: ui - ex});
+  });
+
+  console.group('%cExcel vs UI Kodu Karşılaştırma', 'color:#0a66c2;font-weight:700');
+  console.log('Toplam Excel koli (productMap):', totalExcel);
+  console.log('Toplam UI koli (stores):', totalUI);
+  console.log('Fark (UI - Excel):', (totalUI - totalExcel));
+  console.log('Sadece Excelde olan kod sayısı:', onlyInExcel.length, onlyInExcel.slice(0,20));
+  console.log('Sadece UI da olan kod sayısı:', onlyInUI.length, onlyInUI.slice(0,20));
+  console.log('Her iki tarafta da var ama miktarı farklı olanlar (ilk 50):', bothButDiff.slice(0,50));
+  console.groupEnd();
+
+  // basit UI paneli (sidebar altında)
+  let dbg = document.getElementById('debugPanel');
+  if (!dbg) {
+    dbg = document.createElement('div');
+    dbg.id = 'debugPanel';
+    dbg.style.padding = '8px';
+    dbg.style.borderTop = '1px dashed #ddd';
+    dbg.style.fontSize = '12px';
+    dbg.style.maxHeight = '220px';
+    dbg.style.overflow = 'auto';
+    document.querySelector('#panels').prepend(dbg);
+  }
+  dbg.innerHTML = `
+    <div style="font-weight:700;margin-bottom:6px;">Hızlı Karşılaştırma</div>
+    <div>Excel toplam: <b>${totalExcel.toFixed(2)}</b> · UI toplam: <b>${totalUI.toFixed(2)}</b> · Fark: <b>${(totalUI-totalExcel).toFixed(2)}</b></div>
+    <div style="margin-top:6px;color:#666;font-size:12px;">
+      Sadece Excelde: ${onlyInExcel.length} · Sadece UI: ${onlyInUI.length} · Farklı miktar: ${bothButDiff.length}
+    </div>
+    <details style="margin-top:8px;"><summary>İlk 30 uyumsuz (kısaltılmış)</summary>
+      <pre style="white-space:pre-wrap;max-height:300px;overflow:auto;">${bothButDiff.slice(0,30).map(x=>`${x.kod} → UI:${x.ui} Excel:${x.excel} diff:${x.diff}`).join('\n')}</pre>
+    </details>
+  `;
+
+  // ayrıca toast bildirimi
+  if (Math.abs(totalUI - totalExcel) > 0.001 || onlyInUI.length || onlyInExcel.length) {
+    showToast(`⚠️ Toplamlarda uyuşmazlık: UI ${totalUI.toFixed(2)} vs Excel ${totalExcel.toFixed(2)} (konsolu kontrol edin)`);
+  } else {
+    showToast(`✓ Toplamlar uyuşuyor: ${totalUI.toFixed(2)} koli`);
+  }
+}
+    // Gruplama: aynı dagitici + aynı plaka => aynı ARAÇ
+    const groups = {};
+    tempStores.forEach(s => {
+      const dag = (s.dagitici || '').toString().trim();
+      const pla = (s.plaka || '').toString().trim();
+
+      const canGroup = dag && dag.toLocaleLowerCase('tr') !== 'atanmamış' && pla && pla !== '-';
+      let key;
+      if (canGroup) {
+        key = makeGroupKey(dag, pla);
+      } else {
+        key = s.rut_kodu_original ? `RUT|${String(s.rut_kodu_original).trim()}` : `RUT|UNASSIGNED|${s._id}`;
+      }
+
+      if (!groups[key]) groups[key] = { names: new Set(), dagitici: dag || 'Atanmamış', plaka: pla || '-', items: [] };
+      // Tek bir hücrede "Göztepe/Esenşehir" gibi birden fazla rut adı birlikte yazılmış olsa bile
+      // bunları ayrıştırıp tek tek ekliyoruz; farklı satırlardan gelen tekil adlarla birlikte
+      // aşağıda aynı araç için benzersiz rut adları kümesinde birleşmiş olacaklar.
+      splitRouteParts(s.rut_adi).forEach(part => groups[key].names.add(part));
+      groups[key].items.push(s);
     });
+
+    // currentRoutes oluştur: araç bazlı kapasite arama (plaka -> dagitici -> (tek parça ise) ada/koda fallback)
+    currentRoutes = {};
+    Object.keys(groups).forEach(key => {
+      const g = groups[key];
+      const uniqueNames = Array.from(g.names).filter(Boolean).sort((a,b)=>a.localeCompare(b,'tr'));
+      const displayName = uniqueNames.join('-');
+
+      let kapasite;
+      const groupPlaka = normalizePlaka(g.plaka || '');
+      const groupDagitici = normalizeKeyPart(g.dagitici || '');
+
+      if (groupPlaka && capacityByPlaka[groupPlaka] !== undefined) {
+        kapasite = capacityByPlaka[groupPlaka];
+      } else if (groupDagitici && capacityByDagitici[groupDagitici] !== undefined) {
+        kapasite = capacityByDagitici[groupDagitici];
+      } else if (uniqueNames.length === 1) {
+        const lookup = normalizeKeyPart(uniqueNames[0]);
+        if (capacityByAdi[lookup] !== undefined) kapasite = capacityByAdi[lookup];
+
+        if (kapasite === undefined) {
+          for (const item of g.items) {
+            const rc = item.rut_kodu_original ? String(item.rut_kodu_original).trim() : '';
+            if (rc && capacityByKodu[rc] !== undefined) {
+              kapasite = capacityByKodu[rc];
+              break;
+            }
+          }
+        }
+      } else {
+        // birden fazla parça varsa kapasite sadece araç-plaka veya araç-dagitici bazlıysa kullanılacak (yukarıda), aksi halde undefined
+        kapasite = undefined;
+      }
+
+      currentRoutes[key] = {
+        rut_adi: displayName || g.dagitici || 'Atanmamış',
+        parts: uniqueNames,
+        dagitici: g.dagitici || 'Atanmamış',
+        plaka: g.plaka || '-',
+        kapasite: kapasite
+      };
+
+      g.items.forEach(s => {
+        s.rut_kodu = key;
+        s.rut_adi = currentRoutes[key].rut_adi;
+      });
+    });
+
+    stores = tempStores;
 
     assignColors();
 
@@ -1140,7 +1146,7 @@ async function handleExcelFile(file) {
     const totalKoli = stores.reduce((sum, st) => sum + (st.koli || 0), 0);
     const kFormat = Number.isInteger(totalKoli) ? totalKoli : totalKoli.toFixed(2);
     
-    document.getElementById('storecount').textContent = `${stores.length} mağaza · ${Object.keys(currentRoutes).length} rut`;
+    document.getElementById('storecount').textContent = `${stores.length} mağaza · ${Object.keys(currentRoutes).length} araç`;
     document.getElementById('koliTotal').textContent = `${kFormat} koli`;
 
     if (stores.length) {
@@ -1163,7 +1169,7 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-// --- EXCEL DIŞA AKTARMA (EXPORT) ---
+// Export
 document.getElementById('exportBtn').addEventListener('click', () => {
   if (stores.length === 0) { showToast('Aktarılacak veri yok'); return; }
 
@@ -1201,13 +1207,13 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const ws = XLSX.utils.json_to_sheet(rows);
   ws['!cols'] = [{wch:12},{wch:42},{wch:14},{wch:16},{wch:22},{wch:12},{wch:18},{wch:14},{wch:38},{wch:9},{wch:8}];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Rut Planı');
+  XLSX.utils.book_append_sheet(wb, ws, 'Araç Planı');
   const ts = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-  XLSX.writeFile(wb, `Rut_Plani_${ts}.xlsx`);
+  XLSX.writeFile(wb, `Arac_Plani_${ts}.xlsx`);
   showToast('✓ Excel indirildi');
 });
 
-// --- SEKME VE BİLDİRİM YÖNETİMİ ---
+// Tabs
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.panel === name));
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
@@ -1222,7 +1228,146 @@ function showToast(msg) {
   showToast._h = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
-// Başlangıç Durumu
+// Route list
+function renderRouteList() {
+  const container = document.getElementById('routeList');
+  container.innerHTML = '';
+  const keys = Object.keys(currentRoutes).sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
+  
+  keys.forEach(k => {
+    const info = currentRoutes[k];
+    const count = stores.filter(s => s.rut_kodu === k).length;
+    const koli = stores.filter(s => s.rut_kodu === k).reduce((s, st) => s + (st.koli || 0), 0);
+    const kFormat = Number.isInteger(koli) ? koli : koli.toFixed(2);
+    const pct = computeDoluluk(k);
+    const dolulukBadge = pct !== null
+      ? `<span class="stat-badge doluluk-stat" style="background:${dolulukColor(pct)};color:${pct >= 65 ? '#fff' : '#1b2430'};">${pct.toFixed(0)}% dolu</span>`
+      : '';
+
+    const row = document.createElement('div');
+    row.className = 'route-row';
+    row.dataset.routeKey = k;
+    row.id = `route-row-${k}`;
+    
+    row.innerHTML = `
+      <span class="swatch" style="background:${routeColors[k] || '#888'}"></span>
+      <div class="route-main">
+        <div class="route-sub" title="Haritada göstermek için tıklayın">${escapeHtml(info.rut_adi)}</div>
+        <div class="route-name">${escapeHtml(info.dagitici)} · ${escapeHtml(info.plaka)}</div>
+        <div class="route-stats">
+          <span class="stat-badge"><b>${count}</b> nokta</span>
+          <span class="stat-badge"><b>${kFormat}</b> koli</span>
+          ${dolulukBadge}
+        </div>
+      </div>
+      <div class="route-actions">
+        <input type="checkbox" class="route-toggle" ${hiddenRoutes.has(k) ? '' : 'checked'} title="Göster/Gizle">
+        <button type="button" class="btn-assign-direct" title="Seçili noktaları bu araca ata">Atama Yap</button>
+      </div>
+    `;
+
+    row.querySelector('.route-sub').addEventListener('click', () => zoomToRoute(k));
+    
+    row.querySelector('.route-toggle').addEventListener('change', (e) => {
+      if (e.target.checked) hiddenRoutes.delete(k); else hiddenRoutes.add(k);
+      renderMarkers();
+      scheduleSave();
+    });
+
+    row.querySelector('.btn-assign-direct').addEventListener('click', (e) => {
+      e.stopPropagation();
+      assignSelectedToRoute(k);
+    });
+
+    container.appendChild(row);
+
+    const selAllBtn = document.createElement('div');
+    selAllBtn.style.cssText = 'text-align:right;font-size:11px;color:#2f6f5e;font-weight:700;padding:2px 6px 8px;cursor:pointer;';
+    selAllBtn.textContent = 'Tümünü Seç →';
+    selAllBtn.addEventListener('click', () => selectAllInRoute(k));
+    container.appendChild(selAllBtn);
+  });
+}
+
+function zoomToRoute(k) {
+  const pts = stores.filter(s => s.rut_kodu === k).map(s => [s.lat, s.lon]);
+  if (pts.length === 0) return;
+  map.fitBounds(pts, {padding: [40, 40], maxZoom: 15});
+}
+
+function selectAllInRoute(k) {
+  stores.filter(s => s.rut_kodu === k).forEach(s => selected.add(s._id));
+  renderMarkers();
+  refreshSelectionUI();
+  switchTab('routes');
+  showToast(`${currentRoutes[k].rut_adi} aracındaki tüm mağazalar seçildi`);
+}
+
+// Dist summary
+function renderDistSummary() {
+  const container = document.getElementById('distSummary');
+  container.innerHTML = '';
+  const stats = calcDistStats();
+  const sorted = Object.values(stats).sort((a,b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
+  
+  sorted.forEach(d => {
+    const kFormat = Number.isInteger(d.koli) ? d.koli : d.koli.toFixed(2);
+    const row = document.createElement('div');
+    row.className = 'dist-summary';
+    row.innerHTML = `
+      <div class="dist-summary-row">
+        <div class="dist-name">${escapeHtml(d.dagitici)}</div>
+        <div class="dist-nums">
+          <span><b>${d.nokta}</b> nokta</span>
+          <span><b>${kFormat}</b> koli</span>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(d.rut_adi)} · ${escapeHtml(d.plaka)}</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// Search
+function renderSearchResults(query) {
+  const container = document.getElementById('searchResults');
+  container.innerHTML = '';
+  if (!query || query.trim().length < 2) {
+    container.innerHTML = '<div class="hint">En az 2 karakter yazın.</div>';
+    return;
+  }
+  const q = query.trim().toLocaleLowerCase('tr');
+  const matches = stores.filter(s => s.ad.toLocaleLowerCase('tr').includes(q) || String(s.kod).includes(q)).slice(0, 40);
+  
+  if (matches.length === 0) {
+    container.innerHTML = '<div class="hint">Sonuç bulunamadı.</div>';
+    return;
+  }
+  matches.forEach(s => {
+    const kFormat = Number.isInteger(s.koli) ? s.koli : s.koli.toFixed(2);
+    const row = document.createElement('div');
+    row.className = 'store-row';
+    row.innerHTML = `<b>${escapeHtml(s.ad)}</b><div class="meta">Kod: ${s.kod} · Koli: ${kFormat} · ${selected.has(s._id) ? '✓ Seçili' : ''}</div>`;
+    row.addEventListener('click', () => {
+      map.setView([s.lat, s.lon], 16);
+      toggleSelect(s._id);
+      renderSearchResults(query);
+      if (markerRefs[s._id]) markerRefs[s._id].circle.openPopup();
+    });
+    container.appendChild(row);
+  });
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  selected.clear();
+  renderMarkers();
+  refreshSelectionUI();
+  showToast('Seçim temizlendi');
+});
+
+document.getElementById('searchInput').addEventListener('input', (e) => renderSearchResults(e.target.value));
+
+// Init
 updateEmptyState();
 loadSavedState();
 </script>
