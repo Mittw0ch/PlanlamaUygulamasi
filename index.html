@@ -63,13 +63,6 @@
     .leaflet-container { background: var(--paper); }
 
     /* Harita Üstü Buton ve Bilgi Kartları */
-    #drawMode {
-      position: absolute; top: 12px; right: 12px; z-index: 999; background: var(--panel); border: 1px solid var(--line);
-      border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      color: var(--muted);
-    }
-    #drawMode.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
     #dolulukToggleBtn {
       position: absolute; top: 56px; right: 12px; z-index: 999; background: var(--panel); border: 1px solid var(--line);
       border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -96,13 +89,24 @@
 
     /* Liste stilleri */
     .search-box { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; margin-bottom: 10px; background: #fbfaf7; }
+
+.route-index {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
     .route-row { 
       display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-radius: 10px; 
       border: 1px solid var(--line); background: #ffffff; transition: all 0.25s ease; margin-bottom: 4px; 
     }
+
     .route-row.highlighted-route { 
       background: #fff3e0; border-color: #c96a3d; box-shadow: 0 3px 8px rgba(201, 106, 61, 0.25); transform: translateY(-1px);
     }
+
     .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
     .route-main { flex: 1; min-width: 0; }
     .route-sub { font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink); }
@@ -168,6 +172,38 @@
     .doluluk-legend-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
 
     @media (max-width: 640px){ #sidebar { width: 78vw; min-width: 230px; } }
+
+    /* Seçim Araçları (sol panel) */
+    #selectionToolsBar { padding: 10px 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .tools-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+    .tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .tool-btn {
+      position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      border: 1px solid var(--line); background: #fbfaf7; border-radius: 10px; padding: 8px 4px 6px;
+      cursor: pointer; transition: all .15s ease; font-family: inherit;
+    }
+    .tool-btn:hover { background: #f1efe9; }
+    .tool-btn.active { background: var(--accent); border-color: var(--accent); }
+    .tool-btn.active .tool-icon, .tool-btn.active .tool-text { color: #fff; }
+    .tool-num {
+      position: absolute; top: -6px; left: -6px; width: 17px; height: 17px; border-radius: 50%;
+      background: var(--accent2); color: #fff; font-size: 10px; font-weight: 800; line-height: 17px; text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25); border: 1.5px solid #fff;
+    }
+    .tool-icon { font-size: 17px; line-height: 1; color: var(--ink); }
+    .tool-text { font-size: 10px; font-weight: 700; color: var(--ink); text-align: center; }
+    .tools-hint { font-size: 10.5px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+    #toolStatus {
+      position: absolute; top: 12px; right: 12px; z-index: 999; background: var(--accent); color: #fff; border: 1px solid var(--accent);
+      border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: none; align-items: center; gap: 8px;
+    }
+    #toolStatus.show { display: flex; }
+    #toolStatus .cancel-x { cursor: pointer; font-weight: 800; opacity: .85; }
+    #toolStatus .cancel-x:hover { opacity: 1; }
+
+    #vehicleRegistrySelect { margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -188,6 +224,33 @@
         <span id="saveIndicator" style="font-size:10.5px; color: var(--muted);"></span>
         <button class="btn btn-ghost" id="clearSavedBtn">Kayıtlı Veriyi Temizle</button>
       </div>
+    </div>
+
+    <div id="selectionToolsBar">
+      <div class="tools-label">Seçim Araçları</div>
+      <div class="tools-grid">
+        <button type="button" class="tool-btn" id="tool-polygon" data-tool="polygon" title="Çokgen Seç (Kısayol: 1)">
+          <span class="tool-num">1</span>
+          <span class="tool-icon">⬠</span>
+          <span class="tool-text">Çokgen</span>
+        </button>
+        <button type="button" class="tool-btn" id="tool-lasso" data-tool="lasso" title="Kement ile Seç (Kısayol: 2)">
+          <span class="tool-num">2</span>
+          <span class="tool-icon">➰</span>
+          <span class="tool-text">Kement</span>
+        </button>
+        <button type="button" class="tool-btn" id="tool-circle" data-tool="circle" title="Daire ile Seç (Kısayol: 3)">
+          <span class="tool-num">3</span>
+          <span class="tool-icon">◯</span>
+          <span class="tool-text">Daire</span>
+        </button>
+        <button type="button" class="tool-btn" id="tool-rectangle" data-tool="rectangle" title="Dikdörtgen ile Seç (Kısayol: 4)">
+          <span class="tool-num">4</span>
+          <span class="tool-icon">▭</span>
+          <span class="tool-text">Dikdörtgen</span>
+        </button>
+      </div>
+      <div class="tools-hint">Bir aracı seçip haritada çizin. Çokgen/Kement için ESC ile iptal edin.</div>
     </div>
 
     <div id="tabs">
@@ -211,7 +274,14 @@
 
         <div class="newroute-toggle" id="newRouteToggle">+ Yeni Araç Tanımla</div>
         <div id="newRouteFields" style="display:none; background: #f9f8f5; padding: 10px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 12px;">
-          <label class="field-label">Araç Adı</label>
+          <label class="field-label">Kayıtlı Araçlardan Seç</label>
+          <select id="vehicleRegistrySelect">
+            <option value="">Listeden Seçin</option>
+          </select>
+          <div class="hint" id="vehicleRegistryHint" style="display:none; margin-top:4px; margin-bottom:0;">"Nakil Vasıtaları" sayfası bulunamadı veya boş. Excel'de bu sayfa Kod (plaka) ve Açıklama (personel) sütunlarını içermelidir.</div>
+          <div class="hint" style="margin-top:2px;">Listeden seçtiğinizde Personel ve Plaka alanları otomatik doldurulur, dilerseniz düzenleyebilirsiniz.</div>
+
+          <label class="field-label">Rut Adı</label>
           <input type="text" id="newRutAdi" placeholder="örn. BEYKOZ 2">
           <label class="field-label">Personel</label>
           <input type="text" id="newDagitici" placeholder="örn. Ahmet Yılmaz">
@@ -250,7 +320,7 @@
       </div>
     </div>
 
-    <div id="drawMode">Çokgen Seç</div>
+    <div id="toolStatus"><span id="toolStatusText"></span><span class="cancel-x" id="toolStatusCancel" title="İptal (ESC)">✕</span></div>
     <div id="dolulukToggleBtn" class="" title="Araçların doluluk oranı rozetlerini haritada göster/gizle">Harita Üzerindeki Doluluk Oranını Göster</div>
     <div id="emptyState">
       <h2>Henüz veri yüklenmedi</h2>
@@ -272,9 +342,15 @@ let markerRefs = {};
 let dolulukMarkerRefs = {};
 let dolulukVisible = false;
 
-let drawMode = false;
-let drawPoints = [];
-let drawPolyline = null;
+let activeTool = null;          // null | 'polygon' | 'lasso' | 'circle' | 'rectangle'
+let drawPoints = [];             // polygon & lasso point path
+let drawPolyline = null;         // polygon/lasso preview polyline
+let isMouseDrawing = false;      // mouse-button-down flag for lasso/circle/rectangle
+let circleCenter = null;
+let tempCircleLayer = null;
+let rectCorner1 = null;
+let tempRectLayer = null;
+let vehicleRegistry = [];        // [{plaka, dagitici}] from "Nakil Vasıtaları" sayfası
 
 const map = L.map('map', {zoomControl: false, preferCanvas: true}).setView([39.0, 35.0], 6);
 L.control.zoom({position: 'bottomright'}).addTo(map);
@@ -345,6 +421,7 @@ async function persistState() {
     currentRoutes,
     hiddenRoutes: Array.from(hiddenRoutes),
     dolulukVisible,
+    vehicleRegistry,
     savedAt: new Date().toISOString()
   };
   try {
@@ -376,11 +453,13 @@ async function loadSavedState() {
     currentRoutes = saved.currentRoutes || {};
     hiddenRoutes = new Set(saved.hiddenRoutes || []);
     dolulukVisible = !!saved.dolulukVisible;
+    vehicleRegistry = saved.vehicleRegistry || [];
 
     assignColors();
     renderMarkers();
     renderRouteList();
     renderDistSummary();
+    renderVehicleRegistrySelect();
     refreshSelectionUI();
     updateEmptyState();
     updateSaveIndicator(saved.savedAt);
@@ -457,11 +536,7 @@ function clearAllMapLayers() {
   markerRefs = {};
   Object.values(dolulukMarkerRefs).forEach(m => map.removeLayer(m));
   dolulukMarkerRefs = {};
-  if (drawPolyline) { map.removeLayer(drawPolyline); drawPolyline = null; }
-  drawPoints = [];
-  drawMode = false;
-  document.getElementById('drawMode').classList.remove('active');
-  map.dragging.enable();
+  cancelActiveTool();
 }
 
 function resetAllState() {
@@ -624,7 +699,7 @@ function renderMarkers() {
 
     const circle = L.circleMarker([s.lat, s.lon], markerStyle(s));
     circle.bindPopup(popupHtml(s));
-    circle.on('click', () => { if (!drawMode) toggleSelect(s._id); });
+    circle.on('click', () => { if (!activeTool) toggleSelect(s._id); });
     circle.addTo(map);
 
     const koliFormat = Number.isInteger(s.koli) ? s.koli : s.koli.toFixed(1);
@@ -635,7 +710,7 @@ function renderMarkers() {
       className: 'koli-marker-container'
     });
     const textMarker = L.marker([s.lat, s.lon], {icon: koliIcon, zIndexOffset: -10});
-    textMarker.on('click', () => { if (!drawMode) toggleSelect(s._id); });
+    textMarker.on('click', () => { if (!activeTool) toggleSelect(s._id); });
     textMarker.addTo(map);
 
     markerRefs[s._id] = {circle, text: textMarker};
@@ -721,12 +796,40 @@ document.getElementById('newRouteToggle').addEventListener('click', () => {
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
 });
 
+function renderVehicleRegistrySelect() {
+  const sel = document.getElementById('vehicleRegistrySelect');
+  const hint = document.getElementById('vehicleRegistryHint');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Listeden Seçin —</option>';
+  vehicleRegistry.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = `${v.plaka} · ${v.dagitici}`;
+    sel.appendChild(opt);
+  });
+  const empty = vehicleRegistry.length === 0;
+  sel.style.display = empty ? 'none' : 'block';
+  if (hint) hint.style.display = empty ? 'block' : 'none';
+}
+
+document.getElementById('vehicleRegistrySelect').addEventListener('change', (e) => {
+  const idx = e.target.value;
+  if (idx === '') return;
+  const v = vehicleRegistry[Number(idx)];
+  if (!v) return;
+  document.getElementById('newDagitici').value = v.dagitici;
+  document.getElementById('newPlaka').value = v.plaka;
+  if (!document.getElementById('newRutAdi').value.trim()) {
+    document.getElementById('newRutAdi').value = "";
+  }
+});
+
 document.getElementById('createNewRouteBtn').addEventListener('click', () => {
   const rut_adi = document.getElementById('newRutAdi').value.trim();
   const dagitici = document.getElementById('newDagitici').value.trim();
   const plaka = document.getElementById('newPlaka').value.trim();
 
-  if (!rut_adi || !dagitici) {
+  if (!plaka || !dagitici) {
     showToast('⚠️ Araç adı ve personel ismi girmelisiniz.');
     return;
   }
@@ -756,45 +859,166 @@ document.getElementById('dolulukToggleBtn').addEventListener('click', function()
   scheduleSave();
 });
 
-// Polygon select
-document.getElementById('drawMode').addEventListener('click', () => {
-  if (!drawMode) {
-    drawMode = true;
-    map.dragging.disable();
-    drawPoints = [];
-    if (drawPolyline) map.removeLayer(drawPolyline);
-    document.getElementById('drawMode').classList.add('active');
-    showToast('Haritaya dokun → çokgen çiz → Tamamlamak için butona tekrar bas (ESC ile iptal)');
+// ===== Seçim Araçları (Çokgen / Kement / Daire / Dikdörtgen) =====
+const TOOL_LABELS = {
+  polygon: 'Çokgen',
+  lasso: 'Kement',
+  circle: 'Daire',
+  rectangle: 'Dikdörtgen'
+};
+const TOOL_HINTS = {
+  polygon: 'Haritaya tıklayarak çokgen çizin → aracı tekrar tıklayın veya Enter\'a basın (ESC: iptal)',
+  lasso: 'Basılı tutup sürükleyerek serbest bir alan çizin, bırakınca seçim tamamlanır (ESC: iptal)',
+  circle: 'Merkez noktaya basılı tutup sürükleyerek daireyi büyütün, bırakınca seçim tamamlanır (ESC: iptal)',
+  rectangle: 'Basılı tutup sürükleyerek dikdörtgen çizin, bırakınca seçim tamamlanır (ESC: iptal)'
+};
+
+function setToolButtonUI() {
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tool === activeTool);
+  });
+  const statusEl = document.getElementById('toolStatus');
+  const statusText = document.getElementById('toolStatusText');
+  if (activeTool) {
+    statusText.textContent = TOOL_LABELS[activeTool] + ' — ' + TOOL_HINTS[activeTool];
+    statusEl.classList.add('show');
   } else {
-    if (drawPoints.length > 2) {
-      selectInPolygon(drawPoints);
-    } else if (drawPoints.length > 0) {
-      showToast('En az 3 nokta gerekli');
-      return;
-    }
-    drawMode = false;
-    document.getElementById('drawMode').classList.remove('active');
-    map.dragging.enable();
-    if (drawPolyline) map.removeLayer(drawPolyline);
-    drawPoints = [];
+    statusEl.classList.remove('show');
+  }
+}
+
+function clearTempDrawLayers() {
+  if (drawPolyline) { map.removeLayer(drawPolyline); drawPolyline = null; }
+  if (tempCircleLayer) { map.removeLayer(tempCircleLayer); tempCircleLayer = null; }
+  if (tempRectLayer) { map.removeLayer(tempRectLayer); tempRectLayer = null; }
+  drawPoints = [];
+  circleCenter = null;
+  rectCorner1 = null;
+  isMouseDrawing = false;
+}
+
+function cancelActiveTool(silent) {
+  const wasActive = !!activeTool;
+  clearTempDrawLayers();
+  activeTool = null;
+  map.dragging.enable();
+  setToolButtonUI();
+  if (wasActive && !silent) showToast('Seçim iptal edildi');
+}
+
+function activateTool(tool) {
+  if (activeTool === tool) {
+    if (tool === 'polygon') { finishPolygonSelection(); return; }
+    cancelActiveTool();
+    return;
+  }
+  clearTempDrawLayers();
+  activeTool = tool;
+  map.dragging.disable();
+  setToolButtonUI();
+  if (tool === 'polygon') {
+    showToast('Haritaya dokun → çokgen çiz → Tamamlamak için aracı tekrar tıkla (ESC ile iptal)');
+  } else {
+    showToast(TOOL_HINTS[tool]);
+  }
+}
+
+document.querySelectorAll('.tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => activateTool(btn.dataset.tool));
+});
+document.getElementById('toolStatusCancel').addEventListener('click', () => cancelActiveTool());
+
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+  if (e.key === 'Escape' && activeTool) { cancelActiveTool(); return; }
+
+  if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.key === '1') activateTool('polygon');
+    else if (e.key === '2') activateTool('lasso');
+    else if (e.key === '3') activateTool('circle');
+    else if (e.key === '4') activateTool('rectangle');
+    else if (e.key === 'Enter' && activeTool === 'polygon') finishPolygonSelection();
   }
 });
 
+// Çokgen: tıkla-tıkla-tıkla, aracı tekrar tıklayınca ya da Enter'a basınca tamamlanır
 map.on('click', (e) => {
-  if (!drawMode) return;
+  if (activeTool !== 'polygon') return;
   drawPoints.push(e.latlng);
   if (drawPolyline) map.removeLayer(drawPolyline);
   drawPolyline = L.polyline(drawPoints, {color: '#2f6f5e', weight: 2, dashArray: '5,5'}).addTo(map);
 });
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && drawMode) {
-    drawMode = false;
-    document.getElementById('drawMode').classList.remove('active');
-    map.dragging.enable();
-    if (drawPolyline) map.removeLayer(drawPolyline);
-    drawPoints = [];
-    showToast('Çokgen seçimi iptal edildi');
+function finishPolygonSelection() {
+  if (drawPoints.length > 2) {
+    selectInPolygon(drawPoints);
+  } else if (drawPoints.length > 0) {
+    showToast('En az 3 nokta gerekli');
+    return;
+  }
+  cancelActiveTool(true);
+}
+
+// Kement (lasso): basılı tut, sürükle, bırak
+map.on('mousedown', (e) => {
+  if (activeTool !== 'lasso') return;
+  isMouseDrawing = true;
+  drawPoints = [e.latlng];
+  if (drawPolyline) map.removeLayer(drawPolyline);
+  drawPolyline = L.polyline(drawPoints, {color: '#2f6f5e', weight: 2, dashArray: '3,4'}).addTo(map);
+});
+
+map.on('mousemove', (e) => {
+  if (activeTool === 'lasso' && isMouseDrawing) {
+    drawPoints.push(e.latlng);
+    if (drawPolyline) drawPolyline.setLatLngs(drawPoints);
+  } else if (activeTool === 'circle' && circleCenter) {
+    const radius = map.distance(circleCenter, e.latlng);
+    if (tempCircleLayer) map.removeLayer(tempCircleLayer);
+    tempCircleLayer = L.circle(circleCenter, {radius, color: '#2f6f5e', weight: 2, dashArray: '4,4', fillOpacity: 0.08}).addTo(map);
+  } else if (activeTool === 'rectangle' && rectCorner1) {
+    const bounds = L.latLngBounds(rectCorner1, e.latlng);
+    if (tempRectLayer) map.removeLayer(tempRectLayer);
+    tempRectLayer = L.rectangle(bounds, {color: '#2f6f5e', weight: 2, dashArray: '4,4', fillOpacity: 0.08}).addTo(map);
+  }
+});
+
+map.on('mouseup', () => {
+  if (activeTool === 'lasso' && isMouseDrawing) {
+    isMouseDrawing = false;
+    if (drawPoints.length > 2) selectInPolygon(drawPoints);
+    else showToast('Seçim için haritada sürükleyin');
+    cancelActiveTool(true);
+  }
+});
+
+// Daire: merkeze bas, sürükle, bırak
+map.on('mousedown', (e) => {
+  if (activeTool !== 'circle') return;
+  circleCenter = e.latlng;
+});
+map.on('mouseup', (e) => {
+  if (activeTool === 'circle' && circleCenter) {
+    const radius = map.distance(circleCenter, e.latlng ? e.latlng : circleCenter);
+    if (radius > 0) selectInCircle(circleCenter, radius);
+    else showToast('Seçim için merkezden sürükleyin');
+    cancelActiveTool(true);
+  }
+});
+
+// Dikdörtgen: bir köşeye bas, sürükle, bırak
+map.on('mousedown', (e) => {
+  if (activeTool !== 'rectangle') return;
+  rectCorner1 = e.latlng;
+});
+map.on('mouseup', (e) => {
+  if (activeTool === 'rectangle' && rectCorner1) {
+    const bounds = L.latLngBounds(rectCorner1, e.latlng || rectCorner1);
+    if (bounds.getNorthEast().distanceTo(bounds.getSouthWest()) > 0) selectInRectangle(bounds);
+    else showToast('Seçim için sürükleyerek dikdörtgen çizin');
+    cancelActiveTool(true);
   }
 });
 
@@ -812,6 +1036,28 @@ function selectInPolygon(poly) {
   selected.clear();
   stores.forEach(s => {
     if (pointInPolygon({lat: s.lat, lng: s.lon}, poly)) selected.add(s._id);
+  });
+  renderMarkers();
+  refreshSelectionUI();
+  switchTab('routes');
+  showToast(`${selected.size} mağaza seçildi`);
+}
+
+function selectInCircle(center, radiusMeters) {
+  selected.clear();
+  stores.forEach(s => {
+    if (map.distance(center, L.latLng(s.lat, s.lon)) <= radiusMeters) selected.add(s._id);
+  });
+  renderMarkers();
+  refreshSelectionUI();
+  switchTab('routes');
+  showToast(`${selected.size} mağaza seçildi`);
+}
+
+function selectInRectangle(bounds) {
+  selected.clear();
+  stores.forEach(s => {
+    if (bounds.contains([s.lat, s.lon])) selected.add(s._id);
   });
   renderMarkers();
   refreshSelectionUI();
@@ -895,7 +1141,7 @@ async function handleExcelFile(file) {
       }
     }
 
-    // S_I sayfasındaki sütun tanımlamalarına koli sütununu ekleyin
+
 const siCols = {
   kod: findColumn(siData[0], ['Cari Hesap Kodu']),
   ad: findColumn(siData[0], ['Cari Hesap Ünvanı']),
@@ -905,7 +1151,6 @@ const siCols = {
   rut_adi: findColumn(siData[0], ['PSE Adı', 'MST145_.PSE Adı']),
   dagitici: findColumn(siData[0], ['DAĞITIM PERSONELİ','Dağıtım Personeli']),
   plaka: findColumn(siData[0], ['PLAKA']),
-  // S_I sayfasındaki koli sütunu:
   koli: findColumn(siData[0], ['S_H_D (2).toplam_koli', 'toplam_koli', 'Toplam Koli']) 
 };
 
@@ -948,6 +1193,35 @@ const siCols = {
         }
       }
     }
+
+    // Nakil Vasıtaları — kayıtlı araç listesi (Kod: plaka, Açıklama: dağıtım personeli)
+    vehicleRegistry = [];
+    const nvSheet = wb.Sheets['Nakil Vasıtaları'];
+    if (nvSheet) {
+      const nvData = XLSX.utils.sheet_to_json(nvSheet);
+      if (nvData.length) {
+        const nvCols = {
+          kod: findColumn(nvData[0], ['Kod', 'KOD']),
+          aciklama: findColumn(nvData[0], ['Açıklama', 'AÇIKLAMA', 'Aciklama', 'ACIKLAMA'])
+        };
+        if (nvCols.kod && nvCols.aciklama) {
+          const seen = new Set();
+          nvData.forEach(row => {
+            const plaka = String(row[nvCols.kod] ?? '').trim();
+            const dagitici = String(row[nvCols.aciklama] ?? '').trim();
+            if (!plaka || !dagitici) return;
+            const key = normalizePlaka(plaka) + '|' + normalizeKeyPart(dagitici);
+            if (seen.has(key)) return;
+            seen.add(key);
+            vehicleRegistry.push({ plaka, dagitici });
+          });
+          vehicleRegistry.sort((a, b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
+        } else {
+          showToast('⚠️ "Nakil Vasıtaları" sayfasında Kod/Açıklama sütunları bulunamadı');
+        }
+      }
+    }
+    renderVehicleRegistrySelect();
 
     const normalized = siData.map(r => {
       const o = {};
@@ -1180,7 +1454,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
         rows.push({
           'Cari Hesap Kodu': s.kod,
           'Cari Hesap Ünvanı': s.ad,
-          'MST145_.PSE Kodu': s.rut_kodu,
+          'MST145_.PSE Kodu': s.rut_kodu_original,
           'MST145_.PSE Adı': s.rut_adi,
           'Dağıtım Personeli': s.dagitici,
           'Plaka': s.plaka,
@@ -1195,7 +1469,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
       rows.push({
         'Cari Hesap Kodu': s.kod,
         'Cari Hesap Ünvanı': s.ad,
-        'MST145_.PSE Kodu': s.rut_kodu,
+        'MST145_.PSE Kodu': s.rut_kodu_original,
         'MST145_.PSE Adı': s.rut_adi,
         'Dağıtım Personeli': s.dagitici,
         'Plaka': s.plaka,
@@ -1234,37 +1508,39 @@ function renderRouteList() {
   container.innerHTML = '';
   const keys = Object.keys(currentRoutes).sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
   
-  keys.forEach(k => {
-    const info = currentRoutes[k];
-    const count = stores.filter(s => s.rut_kodu === k).length;
-    const koli = stores.filter(s => s.rut_kodu === k).reduce((s, st) => s + (st.koli || 0), 0);
-    const kFormat = Number.isInteger(koli) ? koli : koli.toFixed(2);
-    const pct = computeDoluluk(k);
-    const dolulukBadge = pct !== null
-      ? `<span class="stat-badge doluluk-stat" style="background:${dolulukColor(pct)};color:${pct >= 65 ? '#fff' : '#1b2430'};">${pct.toFixed(0)}% dolu</span>`
-      : '';
+keys.forEach((k, index) => { // <-- index parametresi eklendi
+  const info = currentRoutes[k];
+  const count = stores.filter(s => s.rut_kodu === k).length;
+  const koli = stores.filter(s => s.rut_kodu === k).reduce((s, st) => s + (st.koli || 0), 0);
+  const kFormat = Number.isInteger(koli) ? koli : koli.toFixed(2);
+  const pct = computeDoluluk(k);
+  const dolulukBadge = pct !== null
+    ? `<span class="stat-badge doluluk-stat" style="background:${dolulukColor(pct)};color:${pct >= 65 ? '#fff' : '#1b2430'};">${pct.toFixed(0)}% dolu</span>`
+    : '';
 
-    const row = document.createElement('div');
-    row.className = 'route-row';
-    row.dataset.routeKey = k;
-    row.id = `route-row-${k}`;
-    
-    row.innerHTML = `
-      <span class="swatch" style="background:${routeColors[k] || '#888'}"></span>
-      <div class="route-main">
-        <div class="route-sub" title="Haritada göstermek için tıklayın">${escapeHtml(info.rut_adi)}</div>
-        <div class="route-name">${escapeHtml(info.dagitici)} · ${escapeHtml(info.plaka)}</div>
-        <div class="route-stats">
-          <span class="stat-badge"><b>${count}</b> nokta</span>
-          <span class="stat-badge"><b>${kFormat}</b> koli</span>
-          ${dolulukBadge}
-        </div>
+  const row = document.createElement('div');
+  row.className = 'route-row';
+  row.dataset.routeKey = k;
+  row.id = `route-row-${k}`;
+  
+  // HTML şablonuna en başa <span class="route-index">${index + 1}</span> eklendi
+  row.innerHTML = `
+    <span class="route-index">${index + 1}</span>
+    <span class="swatch" style="background:${routeColors[k] || '#888'}"></span>
+    <div class="route-main">
+      <div class="route-sub" title="Haritada göstermek için tıklayın">${escapeHtml(info.rut_adi)}</div>
+      <div class="route-name">${escapeHtml(info.dagitici)} · ${escapeHtml(info.plaka)}</div>
+      <div class="route-stats">
+        <span class="stat-badge"><b>${count}</b> nokta</span>
+        <span class="stat-badge"><b>${kFormat}</b> koli</span>
+        ${dolulukBadge}
       </div>
-      <div class="route-actions">
-        <input type="checkbox" class="route-toggle" ${hiddenRoutes.has(k) ? '' : 'checked'} title="Göster/Gizle">
-        <button type="button" class="btn-assign-direct" title="Seçili noktaları bu araca ata">Atama Yap</button>
-      </div>
-    `;
+    </div>
+    <div class="route-actions">
+      <input type="checkbox" class="route-toggle" ${hiddenRoutes.has(k) ? '' : 'checked'} title="Göster/Gizle">
+      <button type="button" class="btn-assign-direct" title="Seçili noktaları bu araca ata">Atama Yap</button>
+    </div>
+  `;
 
     row.querySelector('.route-sub').addEventListener('click', () => zoomToRoute(k));
     
@@ -1369,6 +1645,8 @@ document.getElementById('searchInput').addEventListener('input', (e) => renderSe
 
 // Init
 updateEmptyState();
+renderVehicleRegistrySelect();
+setToolButtonUI();
 loadSavedState();
 </script>
 </body>
