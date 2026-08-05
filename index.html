@@ -1506,7 +1506,7 @@ function showToast(msg) {
 function renderRouteList() {
   const container = document.getElementById('routeList');
   container.innerHTML = '';
-  const keys = Object.keys(currentRoutes).sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
+  const keys = Object.keys(currentRoutes)//.sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
   
 keys.forEach((k, index) => { // <-- index parametresi eklendi
   const info = currentRoutes[k];
