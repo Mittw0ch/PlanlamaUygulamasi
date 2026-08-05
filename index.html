@@ -1507,6 +1507,7 @@ function renderRouteList() {
   const container = document.getElementById('routeList');
   container.innerHTML = '';
   const keys = Object.keys(currentRoutes);//.sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
+  const keys = Object.keys(currentRoutes).reverse();
   
 keys.forEach((k, index) => { // <-- index parametresi eklendi
   const info = currentRoutes[k];
@@ -1584,7 +1585,7 @@ function renderDistSummary() {
   const container = document.getElementById('distSummary');
   container.innerHTML = '';
   const stats = calcDistStats();
-  const sorted = Object.values(stats);//.sort((a,b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
+  const sorted = Object.values(stats).sort((a,b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
   
   sorted.forEach(d => {
     const kFormat = Number.isInteger(d.koli) ? d.koli : d.koli.toFixed(2);
