@@ -592,14 +592,19 @@ function renderDolulukMarkers() {
   clearDolulukMarkers();
   let anyCapacity = false;
 
-  let totalKoliForCapacity = 0;
+let totalKoliForCapacity = 0;
   let totalKapasite = 0;
   Object.keys(currentRoutes).forEach(k => {
     const info = currentRoutes[k];
     if (!info || !info.kapasite) return;
-    anyCapacity = true;
-    totalKoliForCapacity += routeKoli(k);
-    totalKapasite += info.kapasite;
+    
+    const koli = routeKoli(k);
+    // Sadece içinde koli bulunan (aktif kullanılan) araçları genel kapasiteye ve doluluğa dahil et
+    if (koli > 0) {
+      anyCapacity = true;
+      totalKoliForCapacity += koli;
+      totalKapasite += info.kapasite;
+    }
   });
   const genelPct = totalKapasite > 0 ? (totalKoliForCapacity / totalKapasite) * 100 : null;
   const genelBadge = document.getElementById('dolulukGenelBadge');
