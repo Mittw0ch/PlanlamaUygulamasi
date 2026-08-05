@@ -819,8 +819,16 @@ document.getElementById('vehicleRegistrySelect').addEventListener('change', (e) 
   if (idx === '') return;
   const v = vehicleRegistry[Number(idx)];
   if (!v) return;
+  
   document.getElementById('newDagitici').value = v.dagitici;
   document.getElementById('newPlaka').value = v.plaka;
+  
+  // Nakil Vasıtaları sayfasındaki kapasiteyi input alanına aktarır
+  const kapInput = document.getElementById('newKapasite');
+  if (kapInput) {
+    kapInput.value = v.kapasite > 0 ? v.kapasite : '';
+  }
+
   if (!document.getElementById('newRutAdi').value.trim()) {
     document.getElementById('newRutAdi').value = "";
   }
@@ -1202,7 +1210,7 @@ const siCols = {
       }
     }
 
-    // Nakil Vasıtaları — kayıtlı araç listesi (Kod: plaka, Açıklama: dağıtım personeli)
+// Nakil Vasıtaları — kayıtlı araç listesi ve kapasiteleri
     vehicleRegistry = [];
     const nvSheet = wb.Sheets['Nakil Vasıtaları'];
     if (nvSheet) {
@@ -1210,18 +1218,22 @@ const siCols = {
       if (nvData.length) {
         const nvCols = {
           kod: findColumn(nvData[0], ['Kod', 'KOD']),
-          aciklama: findColumn(nvData[0], ['Açıklama', 'AÇIKLAMA', 'Aciklama', 'ACIKLAMA'])
+          aciklama: findColumn(nvData[0], ['Açıklama', 'AÇIKLAMA', 'Aciklama', 'ACIKLAMA']),
+          kapasite: findColumn(nvData[0], ['Kapasite', 'KAPASİTE', 'KAPASITE'])
         };
         if (nvCols.kod && nvCols.aciklama) {
           const seen = new Set();
           nvData.forEach(row => {
             const plaka = String(row[nvCols.kod] ?? '').trim();
             const dagitici = String(row[nvCols.aciklama] ?? '').trim();
+            const rawKap = nvCols.kapasite ? row[nvCols.kapasite] : '';
+            const kapasite = parseFloat(String(rawKap ?? '').toString().replace(',', '.')) || 0;
+
             if (!plaka || !dagitici) return;
             const key = normalizePlaka(plaka) + '|' + normalizeKeyPart(dagitici);
             if (seen.has(key)) return;
             seen.add(key);
-            vehicleRegistry.push({ plaka, dagitici });
+            vehicleRegistry.push({ plaka, dagitici, kapasite });
           });
           vehicleRegistry.sort((a, b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
         } else {
