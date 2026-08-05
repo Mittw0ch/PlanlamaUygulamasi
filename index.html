@@ -109,9 +109,9 @@
 
     .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
     .route-main { flex: 1; min-width: 0; }
-    .route-sub { font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink); }
-    .route-sub:hover { color: var(--accent); text-decoration: underline; }
-    .route-name { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .route-name { font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink); }
+    .route-name:hover { color: var(--accent); text-decoration: underline; }
+    .route-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .route-stats { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
     .stat-badge { font-size: 10.5px; background: #efece3; padding: 2px 6px; border-radius: 4px; color: var(--ink); }
     .stat-badge b { font-weight: 700; color: var(--accent2); }
@@ -1528,8 +1528,8 @@ keys.forEach((k, index) => { // <-- index parametresi eklendi
     <span class="route-index">${index + 1}</span>
     <span class="swatch" style="background:${routeColors[k] || '#888'}"></span>
     <div class="route-main">
-      <div class="route-sub" title="Haritada göstermek için tıklayın">${escapeHtml(info.rut_adi)}</div>
-      <div class="route-name">${escapeHtml(info.dagitici)} · ${escapeHtml(info.plaka)}</div>
+      <div class="route-name" title="Haritada göstermek için tıklayın">${escapeHtml(info.rut_adi)}</div>
+      <div class="route-sub">${escapeHtml(info.dagitici)} · ${escapeHtml(info.plaka)}</div>
       <div class="route-stats">
         <span class="stat-badge"><b>${count}</b> nokta</span>
         <span class="stat-badge"><b>${kFormat}</b> koli</span>
