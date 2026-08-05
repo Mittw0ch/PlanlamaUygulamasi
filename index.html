@@ -1584,7 +1584,7 @@ function renderDistSummary() {
   const container = document.getElementById('distSummary');
   container.innerHTML = '';
   const stats = calcDistStats();
-  const sorted = Object.values(stats).sort((a,b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
+  const sorted = Object.values(stats);//.sort((a,b) => a.dagitici.localeCompare(b.dagitici, 'tr'));
   
   sorted.forEach(d => {
     const kFormat = Number.isInteger(d.koli) ? d.koli : d.koli.toFixed(2);
