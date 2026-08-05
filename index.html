@@ -287,6 +287,8 @@
           <input type="text" id="newDagitici" placeholder="örn. Ahmet Yılmaz">
           <label class="field-label">Plaka</label>
           <input type="text" id="newPlaka" placeholder="örn. 34AB123">
+          <label class="field-label">Kapasite (Koli)</label>
+	        <input type="text" id="newKapasite" placeholder="örn. 500">
           <button class="btn btn-primary" id="createNewRouteBtn" style="width:100%; margin-top:10px;">Araç Oluştur</button>
         </div>
 
@@ -828,34 +830,40 @@ document.getElementById('createNewRouteBtn').addEventListener('click', () => {
   const rut_adi = document.getElementById('newRutAdi').value.trim();
   const dagitici = document.getElementById('newDagitici').value.trim();
   const plaka = document.getElementById('newPlaka').value.trim();
+  const rawKap = document.getElementById('newKapasite') ? document.getElementById('newKapasite').value.trim() : '';
+  const kapasite = parseFloat(rawKap.replace(',', '.')) || 0;
 
   if (!plaka || !dagitici) {
-    showToast('⚠️ Araç adı ve personel ismi girmelisiniz.');
+    showToast('⚠️ Araç plakası ve personel ismi girmelisiniz.');
     return;
   }
 
-  const key = 'ARAC-YENI-' + rut_adi.toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ]+/g, '').slice(0, 20) + '-' + (Date.now() % 10000);
-  currentRoutes[key] = { rut_adi, dagitici, plaka: plaka || '-' };
+  const key = 'ARAC-YENI-' + (rut_adi ? rut_adi.toUpperCase() : plaka).replace(/[^A-Z0-9ÇĞİÖŞÜ]+/g, '').slice(0, 20) + '-' + (Date.now() % 10000);
+  
+  // ÖNCE yeni aracı yazıyoruz, SONRA ...currentRoutes diyerek eski araçları ekliyoruz.
+  // Bu sayede yeni araç her zaman en üstte yer alır.
+  currentRoutes = {
+    [key]: { 
+      rut_adi: rut_adi || plaka, 
+      dagitici, 
+      plaka: plaka || '-', 
+      kapasite: kapasite > 0 ? kapasite : undefined 
+    },
+    ...currentRoutes
+  };
 
   assignColors();
   renderRouteList();
   renderDistSummary();
+  if (typeof renderDolulukMarkers === 'function') renderDolulukMarkers();
 
   document.getElementById('newRouteFields').style.display = 'none';
-  document.getElementById('newRutAdi').value = '';
+  if(document.getElementById('newRutAdi')) document.getElementById('newRutAdi').value = '';
   document.getElementById('newDagitici').value = '';
   document.getElementById('newPlaka').value = '';
-  showToast(`✓ "${rut_adi}" aracı oluşturuldu.`);
-  scheduleSave();
-});
-
-document.getElementById('dolulukToggleBtn').addEventListener('click', function() {
-  dolulukVisible = !dolulukVisible;
-  this.classList.toggle('active', dolulukVisible);
-  this.textContent = dolulukVisible 
-    ? 'Harita Üzerindeki Doluluk Oranını Gizle' 
-    : 'Harita Üzerindeki Doluluk Oranını Göster';
-  renderDolulukMarkers();
+  if(document.getElementById('newKapasite')) document.getElementById('newKapasite').value = '';
+  
+  showToast(`✓ "${rut_adi || plaka}" aracı oluşturuldu.`);
   scheduleSave();
 });
 
@@ -1507,8 +1515,16 @@ function renderRouteList() {
   const container = document.getElementById('routeList');
   container.innerHTML = '';
   //const keys = Object.keys(currentRoutes).sort((a,b) => (currentRoutes[a].rut_adi || '').localeCompare(currentRoutes[b].rut_adi || '', 'tr'));
-  const keys = Object.keys(currentRoutes).reverse();
-  
+  //const keys = Object.keys(currentRoutes).reverse();
+  // Nesnedeki araçları, anahtarlarındaki zaman damgasına (veya eklenme sırasına) göre 
+  // en yeni en üstte olacak şekilde (büyükten küçüğe) kesin olarak sıralar:
+  const keys = Object.keys(currentRoutes).sort((a, b) => {
+  // Eğer özel bir sıralama istenmiyorsa veya standart sırasını korusun istiyorsanız,
+  // yeni eklenen anahtarların 'ARAC-YENI-' içindeki zaman damgasına göre sıralayalım:
+  const timeA = parseInt(a.split('-').pop()) || 0;
+  const timeB = parseInt(b.split('-').pop()) || 0;
+  return timeB - timeA; // En büyük (en güncel/yeni) zaman damgası en üste gelir
+});
 keys.forEach((k, index) => { // <-- index parametresi eklendi
   const info = currentRoutes[k];
   const count = stores.filter(s => s.rut_kodu === k).length;
