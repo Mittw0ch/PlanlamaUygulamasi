@@ -1678,6 +1678,15 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 document.getElementById('searchInput').addEventListener('input', (e) => renderSearchResults(e.target.value));
 
 // Init
+	document.getElementById('dolulukToggleBtn').addEventListener('click', () => {
+  dolulukVisible = !dolulukVisible;
+  const btn = document.getElementById('dolulukToggleBtn');
+  btn.classList.toggle('active', dolulukVisible);
+  btn.textContent = dolulukVisible ? 'Harita Üzerindeki Doluluk Oranını Gizle' : 'Harita Üzerindeki Doluluk Oranını Göster';
+  
+  renderDolulukMarkers();
+  scheduleSave();
+});
 updateEmptyState();
 renderVehicleRegistrySelect();
 setToolButtonUI();
