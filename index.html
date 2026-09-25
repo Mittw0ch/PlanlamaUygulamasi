@@ -357,10 +357,9 @@ let vehicleRegistry = [];        // [{plaka, dagitici}] from "Nakil Vasıtaları
 const map = L.map('map', {zoomControl: false, preferCanvas: true}).setView([39.0, 35.0], 6);
 L.control.zoom({position: 'bottomright'}).addTo(map);
 
-L.tileLayer((https://tile.openstreetmap.org/){z}/{x}/{y}.png, {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-  subdomains: 'abcd'
+L.tileLayer('https://mt1.google.com/vt/lyrs=m&apistyle=s.t:4|p.v:off&x={x}&y={y}&z={z}', {
+  maxZoom: 20,
+  attribution: '&copy; Google Haritalar'
 }).addTo(map);
 
 const canvasRenderer = L.canvas({padding: 0.5});
