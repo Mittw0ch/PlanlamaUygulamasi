@@ -6,9 +6,7 @@
   <title>DD Anadolu Araç Planlama Çalışması</title>
   
   <!-- Dış Kütüphaneler: Harita (Leaflet) ve Excel (SheetJS) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
   <style>
     :root {
@@ -357,10 +355,9 @@ let vehicleRegistry = [];        // [{plaka, dagitici}] from "Nakil Vasıtaları
 const map = L.map('map', {zoomControl: false, preferCanvas: true}).setView([39.0, 35.0], 6);
 L.control.zoom({position: 'bottomright'}).addTo(map);
 
-L.tileLayer((https://tile.openstreetmap.org/){z}/{x}/{y}.png, {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-  subdomains: 'abcd'
+L.tileLayer('https://mt1.google.com/vt/lyrs=m&apistyle=s.t:4|p.v:off&x={x}&y={y}&z={z}', {
+  maxZoom: 20,
+  attribution: '&copy; Google Haritalar'
 }).addTo(map);
 
 const canvasRenderer = L.canvas({padding: 0.5});
